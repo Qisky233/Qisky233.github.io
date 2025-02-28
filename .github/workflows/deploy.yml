@@ -20,37 +20,14 @@ jobs:
           folder: dist
 
   notes-deploy:
-    name: 部署笔记到独立分支
+    name: 部署React到GitHub Pages
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: main-repo
-
-      - name: 初始化分支
-        run: |
-          cd main-repo
-          git checkout --orphan notes
-          git reset --hard
-
-      - name: 同步内容
-        run: |
-          cd main-repo
-          mkdir -p src/notes  # 确保目录存在
-          cp -rv src/notes/* . 2>/dev/null || true  # 忽略错误
-          git add .
-          git commit -m "Update notes"
-
-      - uses: ad-m/github-push-action@master
+      - run: npm install
+      - run: npm run build
+      - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: notes
-          force: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: fjogeleit/http-request-action@v1
-        with:
-          url: "http://117.72.70.19:80/webhook"
-          method: POST
-          contentType: "application/json"
-          data: '{"ref":"${{ github.ref }}","repository":{"full_name":"${{ github.repository }}"}}'
-          secret: ${{ secrets.SERVER_DEPLOY_TOKEN }}
+          folder: src/notes
