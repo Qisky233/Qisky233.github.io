@@ -35,6 +35,10 @@ jobs:
           
       - name: 同步笔记内容
         run: |
+          pwd
+          ls -la
+          ls -la src/
+          ls -la src/notes/
           cp -r src/notes/* .
           git add .
           git config --global user.email "actions@github.com"
