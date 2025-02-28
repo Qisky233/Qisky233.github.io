@@ -12,10 +12,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      - name: 安装Node依赖
-        run: npm install
-      - name: 项目打包
-        run: npm run build
+      - run: npm install
+      - run: npm run build
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
@@ -25,46 +23,32 @@ jobs:
     name: 部署笔记到独立分支
     runs-on: ubuntu-latest
     steps:
-      - name: 检出主分支内容
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           path: main-repo
 
-      - name: 初始化notes分支
-        run:
+      - run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           git checkout --orphan notes
           git reset --hard
+          git clean -fd
 
-      - name: 同步笔记目录结构
-        run:
-          cp -r main-repo/src/notes ./
-
-          echo "当前目录结构："
-          ls -lR
-          
+      - run: |
+          cp -r main-repo/src/notes/* .
           git add .
           git commit -m "Update notes @ $(date +'%Y-%m-%d %H:%M:%S')"
 
-      - name: 强制推送分支
-        uses: ad-m/github-push-action@master
+      - uses: ad-m/github-push-action@master
         with:
           branch: notes
           force: true
-          tokens: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 触发服务器部署
-        uses: fjogeleit/http-request-action@main
+      - uses: fjogeleit/http-request-action@v1
         with:
           url: "http://117.72.70.19:80/webhook"
-          method: "POST"
+          method: POST
           contentType: "application/json"
-          data: |
-            {
-              "ref": "${{ github.ref }}",
-              "repository": {
-                "full_name": "${{ github.repository }}"
-              }
-            }
-          secret: "${{ secrets.SERVER_DEPLOY_TOKEN }}"  # 需在仓库Secrets中设置
+          data: '{"ref":"${{ github.ref }}","repository":{"full_name":"${{ github.repository }}"}}'
+          secret: ${{ secrets.SERVER_DEPLOY_TOKEN }}
