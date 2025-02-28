@@ -1,8 +1,8 @@
 <?php
 // 仅在直接访问时执行动态逻辑
-if (php_sapi_name() !== 'cli-server') {
-    die('This file should not be accessed directly');
-}
+// if (php_sapi_name() !== 'cli-server') {
+//     die('This file should not be accessed directly');
+// }
 
 
 define('ROOT_DIR', realpath(__DIR__));
