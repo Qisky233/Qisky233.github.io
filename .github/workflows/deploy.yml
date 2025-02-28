@@ -20,19 +20,34 @@ jobs:
   notes-deploy:
     name: 同步笔记到独立分支
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 必须的写入权限
     steps:
       - uses: actions/checkout@v4
-
-      - name: 准备笔记内容
-        run: |
-          # 创建临时目录存放笔记
-          mkdir -p notes-temp
-          cp -r src/notes/* notes-temp/
-
-      - uses: JamesIves/github-pages-deploy-action@v4
         with:
-          branch: notes                 # 目标分支名称
-          folder: notes-temp            # 源文件目录
-          clean: true                   # 清空目标分支旧内容
-          target-folder: "/"            # 部署到根目录
-          token: ${{ secrets.GITHUB_TOKEN }}  # 使用内置权限
+          fetch-depth: 0  # 获取完整提交历史
+
+      - name: 创建或重置notes分支
+        run: |
+          # 创建/切换孤儿分支
+          git checkout --orphan notes
+          git reset --hard
+          git clean -fd
+
+          # 同步主分支的notes内容
+          git checkout main -- src/notes
+          mv src/notes/* .
+          rm -rf src/
+
+          # 提交变更
+          git add .
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git commit -m "Sync notes @ $(date +'%Y-%m-%d %H:%M:%S')"
+
+      - name: 强制推送分支
+        uses: ad-m/github-push-action@master
+        with:
+          branch: notes
+          force: true
+          token: ${{ secrets.GITHUB_TOKEN }}
