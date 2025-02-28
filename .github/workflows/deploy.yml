@@ -20,14 +20,18 @@ jobs:
           folder: dist
 
   notes-deploy:
-    name: 部署React到GitHub Pages
+    name: 部署笔记到独立分支
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'  # 可改为 notes 触发
     steps:
       - uses: actions/checkout@v4
-      - run: npm install
-      - run: npm run build
+      - run: |
+          # 直接部署指定目录
+          mkdir -p notes-content
+          cp -r src/notes/* notes-content/
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
-          branch: notes
-          folder: src/notes
+          branch: notes                   # 目标分支
+          folder: notes-content           # 源文件夹
+          clean: true                     # 清除旧内容
+          target-folder: "/"              # 部署到根目录
