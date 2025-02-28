@@ -3,13 +3,11 @@ on:
   push:
     branches:
       - main
-      - notes
 
 jobs:
   react-deploy:
     name: 部署React到GitHub Pages
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
       - run: npm install
@@ -20,18 +18,21 @@ jobs:
           folder: dist
 
   notes-deploy:
-    name: 部署笔记到独立分支
+    name: 同步笔记到独立分支
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'  # 可改为 notes 触发
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          # 直接部署指定目录
-          mkdir -p notes-content
-          cp -r src/notes/* notes-content/
+
+      - name: 准备笔记内容
+        run: |
+          # 创建临时目录存放笔记
+          mkdir -p notes-temp
+          cp -r src/notes/* notes-temp/
+
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
-          branch: notes                   # 目标分支
-          folder: notes-content           # 源文件夹
-          clean: true                     # 清除旧内容
-          target-folder: "/"              # 部署到根目录
+          branch: notes                 # 目标分支名称
+          folder: notes-temp            # 源文件目录
+          clean: true                   # 清空目标分支旧内容
+          target-folder: "/"            # 部署到根目录
+          token: ${{ secrets.GITHUB_TOKEN }}  # 使用内置权限
